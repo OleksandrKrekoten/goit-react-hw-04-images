@@ -9,7 +9,7 @@ import { Searchbar } from './Searchbar/Searchbar';
 import toast, { Toaster } from 'react-hot-toast';
 export function App() {
   const [images, setImages] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('car');
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [showLoadMoreButton, setShowLoadMoreButton] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -18,31 +18,35 @@ export function App() {
   const [modalURL, setModalURL] = useState('');
   const [modalALT, setModalALT] = useState('');
   useEffect(() => {
-   
+    console.log('useEffect');
+    if (searchQuery !== '') {
       setIsLoading({ isLoading: true });
-      getPhoto(searchQuery, page).then(response => {
-        if (response.totalHits === 0) {
-          console.log('oops');
-          toast.error('Nothing found.');
-        }
-        setImages(prev => [...prev, ...response.hits]);
-
-        if (response.hits.length < 12) {
-          setShowLoadMoreButton(false);
-        } else {
-          setShowLoadMoreButton(true);
-        }
-      }).catch(error => {
-       console.log(error);
-      setError('oops🤷‍♀️ try reloading the page🤞');
-    }).finally(()=>{
-      setTimeout(() => {
-        setIsLoading(false);
-      }, '200');
-    }  
-    )
+      getPhoto(searchQuery, page)
+        .then(response => {
+          if (response.totalHits === 0) {
+            console.log('oops');
+            toast.error('Nothing found.');
+          }
+          setImages(prev => [...prev, ...response.hits]);
+          console.log(response);
+          if (page === response.total / 12 || response.hits < 12) {
+            setShowLoadMoreButton(false);
+          } else {
+            setShowLoadMoreButton(true);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          setError('oops🤷‍♀️ try reloading the page🤞');
+        })
+        .finally(() => {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 200);
+        });
+    }
   }, [page, searchQuery]);
-
+  console.log(images.length);
   const handleSubmit = e => {
     e.preventDefault();
     setSearchQuery(e.target.elements.query.value);
@@ -56,7 +60,7 @@ export function App() {
   };
 
   const toggleModal = (tag, img) => {
-    setShowModal(prev => !prev.showModal);
+    setShowModal(prev => !prev);
     setModalURL(img ?? '');
     setModalALT(tag ?? '');
   };
